@@ -12,13 +12,32 @@ export default function AuthForm({ mode }) {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [formError, setFormError] = useState("");
   const [socialLoading, setSocialLoading] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setFormError("");
+
+    if (signup && !name.trim()) {
+      const msg = "অনুগ্রহ করে আপনার নাম লিখুন।";
+      setFormError(msg);
+      toast.error(msg);
+      return;
+    }
+
+    if (!email.trim() || !email.includes("@")) {
+      const msg = "সঠিক ইমেইল ঠিকানা দিন।";
+      setFormError(msg);
+      toast.error(msg);
+      return;
+    }
 
     if (!password || password.length < 8) {
-      return toast.error("পাসওয়ার্ড কমপক্ষে ৮ অক্ষরের হতে হবে।");
+      const msg = "পাসওয়ার্ড কমপক্ষে ৮ অক্ষরের হতে হবে।";
+      setFormError(msg);
+      toast.error(msg);
+      return;
     }
 
     setLoading(true);
@@ -31,11 +50,15 @@ export default function AuthForm({ mode }) {
         });
 
         if (result?.error) {
-          toast.error(result.error.message || "রেজিস্ট্রেশন করা যায়নি।");
+          const raw = result.error.message || "";
+          const msg = raw.includes("exists")
+            ? "এই ইমেইল দিয়ে ইতিমধ্যে একটি অ্যাকাউন্ট রয়েছে।"
+            : raw || "রেজিস্ট্রেশন করা যায়নি।";
+          setFormError(msg);
+          toast.error(msg);
           return;
         }
 
-        await authClient.signOut();
         toast.success("রেজিস্ট্রেশন সফল হয়েছে! এবার সাইন ইন করুন।");
         router.push("/signin");
       } else {
@@ -45,7 +68,13 @@ export default function AuthForm({ mode }) {
         });
 
         if (result?.error) {
-          toast.error(result.error.message || "ভুল ইমেইল বা পাসওয়ার্ড।");
+          const raw = result.error.message || "";
+          const msg =
+            raw.includes("Invalid") || raw.includes("credentials")
+              ? "ভুল ইমেইল বা পাসওয়ার্ড।"
+              : raw || "ভুল ইমেইল বা পাসওয়ার্ড।";
+          setFormError(msg);
+          toast.error(msg);
           return;
         }
 
@@ -54,7 +83,9 @@ export default function AuthForm({ mode }) {
         router.refresh();
       }
     } catch {
-      toast.error("সার্ভার এরর, অনুগ্রহ করে আবার চেষ্টা করুন।");
+      const msg = "সার্ভার এরর, অনুগ্রহ করে আবার চেষ্টা করুন।";
+      setFormError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -104,6 +135,11 @@ export default function AuthForm({ mode }) {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {formError && (
+            <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-xs sm:text-sm font-medium text-red-700">
+              ⚠️ {formError}
+            </div>
+          )}
           {signup && (
             <div>
               <label

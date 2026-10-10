@@ -21,6 +21,10 @@ export default function ProductDetailsPage() {
     }
   }, [isPending, session, router]);
 
+  if (!isPending && !session) {
+    return null;
+  }
+
   if (isPending || loading) {
     return (
       <main className="mx-auto min-h-screen max-w-6xl px-4 py-8 sm:py-12 space-y-6">
