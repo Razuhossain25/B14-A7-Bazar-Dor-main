@@ -63,9 +63,11 @@ export default function AuthForm({ mode }) {
   const handleSocialSignIn = async (provider) => {
     setSocialLoading(provider);
     try {
+      const callbackURL =
+        typeof window !== "undefined" ? `${window.location.origin}/` : "/";
       const result = await authClient.signIn.social({
         provider,
-        callbackURL: "/",
+        callbackURL,
       });
 
       if (result?.error) {
