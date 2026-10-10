@@ -1,102 +1,116 @@
 "use client";
-import { use, useState } from "react";
+import { use, useMemo, useState } from "react";
 import Link from "next/link";
 import useProducts from "@/lib/useProducts";
 import ProductCard, { CardSkeletons } from "@/components/ProductCard";
-import { fromBn } from "@/lib/utils";
+import { fromBn, toBn } from "@/lib/utils";
 
-export default function Category({ params }) {
+export default function CategoryPage({ params }) {
   const { slug } = use(params);
   const { loading, categories, products } = useProducts();
   const [sort, setSort] = useState("default");
 
-  const cat = categories.find((c) => c.slug === slug || c.id === slug);
-  let items = products.filter((p) => p.category === slug || (cat && p.category === cat.slug));
+  const category = categories.find((c) => c.slug === slug || c.id === slug);
+  const categoryProducts = products.filter(
+    (p) => p.category === slug || (category && p.category === category.slug)
+  );
 
-  const getNumericPrice = (p) => {
-    const val = p.today ?? p.price ?? 0;
-    return typeof val === "number" ? val : fromBn(val);
-  };
+  const sortedProducts = useMemo(() => {
+    const list = [...categoryProducts];
+    const getNumericPrice = (p) => {
+      const val = p.today ?? p.price ?? 0;
+      return typeof val === "number" ? val : fromBn(val);
+    };
 
-  if (sort === "asc") {
-    items = [...items].sort((a, b) => getNumericPrice(a) - getNumericPrice(b));
-  } else if (sort === "desc") {
-    items = [...items].sort((a, b) => getNumericPrice(b) - getNumericPrice(a));
+    if (sort === "low-high" || sort === "asc") {
+      list.sort((a, b) => getNumericPrice(a) - getNumericPrice(b));
+    } else if (sort === "high-low" || sort === "desc") {
+      list.sort((a, b) => getNumericPrice(b) - getNumericPrice(a));
+    }
+    return list;
+  }, [categoryProducts, sort]);
+
+  if (loading) {
+    return (
+      <main className="mx-auto min-h-screen max-w-6xl px-4 py-10 space-y-6">
+        <div className="skeleton h-5 w-24 rounded-lg" />
+        <div className="skeleton h-32 w-full rounded-2xl bg-white" />
+        <div className="skeleton h-8 w-48 rounded-lg mt-8" />
+        <CardSkeletons n={6} />
+      </main>
+    );
+  }
+
+  if (!category || categoryProducts.length === 0) {
+    return (
+      <main className="mx-auto min-h-screen max-w-6xl px-4 py-16 text-center">
+        <div className="rounded-2xl border border-green-100 bg-white p-10 max-w-md mx-auto shadow-sm">
+          <p className="text-5xl mb-4">🔎</p>
+          <h1 className="text-2xl font-bold text-[#202b23]">
+            এই ক্যাটাগরিতে কোনো পণ্য পাওয়া যায়নি
+          </h1>
+          <p className="mt-2 text-sm text-gray-500">
+            অন্য ক্যাটাগরি নির্বাচন করে আবার চেষ্টা করুন।
+          </p>
+          <Link
+            href="/"
+            className="btn mt-6 bg-green-700 hover:bg-green-800 text-white border-none"
+          >
+            হোম পেজে ফিরে যান
+          </Link>
+        </div>
+      </main>
+    );
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 md:py-12">
-      {loading ? (
-        <div className="space-y-6">
-          <div className="skeleton h-10 w-48" />
-          <CardSkeletons n={8} />
-        </div>
-      ) : !cat || !items.length ? (
-        <div className="text-center py-20 bg-base-100 rounded-2xl border border-base-300 p-8 max-w-xl mx-auto shadow-xs">
-          <div className="text-6xl mb-4">🧺</div>
-          <h1 className="text-2xl font-bold text-base-content">
-            ৪০৪ — এই ক্যাটাগরিতে কোনো পণ্য পাওয়া যায়নি
-          </h1>
-          <p className="mt-2 text-base-content/70">
-            সম্ভবত ক্যাটাগরিটি পরিবর্তিত হয়েছে বা বিদ্যমান নেই।
-          </p>
-          <Link href="/" className="btn btn-primary mt-6">
-            ← হোম পেজে ফিরে যান
-          </Link>
-        </div>
-      ) : (
-        <>
-          
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-4 border-b border-base-300">
-            <div>
-              <div className="flex items-center gap-3">
-                <span className="text-3xl">{cat.icon}</span>
-                <h1 className="text-3xl font-bold text-base-content">
-                  {cat.nameBn || cat.name}
-                </h1>
-              </div>
-              <p className="text-sm text-base-content/60 mt-1">
-                মোট {items.length}টি পণ্যের আজকের বাজারদর
-              </p>
-            </div>
+    <main className="mx-auto min-h-screen max-w-6xl px-4 py-10">
+      <Link href="/" className="text-sm font-medium text-green-700 hover:underline">
+        ← হোম পেজ
+      </Link>
 
-            
-            <div className="flex items-center gap-2 self-start sm:self-auto">
-              <label htmlFor="sort-dropdown" className="text-sm font-medium text-base-content/80 whitespace-nowrap">
-                সাজান:
-              </label>
-              <div className="relative inline-block">
-                <select
-                  id="sort-dropdown"
-                  className="select select-bordered select-sm sm:select-md pr-10 font-medium focus:outline-primary bg-base-100"
-                  value={sort}
-                  onChange={(e) => setSort(e.target.value)}
-                >
-                  <option value="default">ডিফল্ট</option>
-                  <option value="asc">দাম: কম থেকে বেশি</option>
-                  <option value="desc">দাম: বেশি থেকে কম</option>
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-base-content/60">
-                  <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
-                    <path
-                      d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                      clipRule="evenodd"
-                      fillRule="evenodd"
-                    />
-                  </svg>
-                </div>
-              </div>
-            </div>
+      {/* Header Banner */}
+      <section className="mt-6 rounded-2xl border border-green-100 bg-white p-6 sm:p-8 shadow-xs">
+        <div className="flex items-center gap-4">
+          <span className="text-5xl block">{category.icon}</span>
+          <div>
+            <p className="text-sm font-semibold text-green-700">পণ্য ক্যাটাগরি</p>
+            <h1 className="text-3xl font-extrabold text-[#202b23]">
+              {category.nameBn || category.name}
+            </h1>
+            <p className="mt-1 text-sm text-gray-500 font-medium">
+              মোট {toBn(categoryProducts.length)}টি পণ্য
+            </p>
           </div>
+        </div>
+      </section>
 
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {items.map((p) => (
-              <ProductCard key={p.slug || p.id} p={p} />
-            ))}
-          </div>
-        </>
-      )}
-    </div>
+      {/* Products & Sort Section */}
+      <section className="mt-8">
+        <div className="mb-5 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+          <h2 className="text-xl font-bold text-[#202b23]">এই ক্যাটাগরির সব পণ্য</h2>
+
+          <label className="flex items-center gap-3 text-sm">
+            <span className="whitespace-nowrap font-medium text-[#202b23]">সাজান:</span>
+
+            <select
+              className="select select-bordered select-sm sm:select-md w-full max-w-xs bg-white text-sm font-medium text-[#202b23]"
+              value={sort}
+              onChange={(e) => setSort(e.target.value)}
+            >
+              <option value="default">ডিফল্ট</option>
+              <option value="low-high">দাম: কম থেকে বেশি</option>
+              <option value="high-low">দাম: বেশি থেকে কম</option>
+            </select>
+          </label>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {sortedProducts.map((product) => (
+            <ProductCard key={product.id || product.slug} p={product} />
+          ))}
+        </div>
+      </section>
+    </main>
   );
 }
