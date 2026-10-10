@@ -1,14 +1,15 @@
 "use client";
-import { use, useEffect } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { authClient } from "@/lib/auth-client";
 import useProducts from "@/lib/useProducts";
 import { fmtPct, getChangeDir, toBn } from "@/lib/utils";
 
-export default function ProductDetailsPage({ params }) {
-  const { slug } = use(params);
+export default function ProductDetailsPage() {
+  const routeParams = useParams();
+  const slug = routeParams?.slug;
   const router = useRouter();
   const { data: session, isPending } = authClient.useSession();
   const { loading, categories, products } = useProducts();

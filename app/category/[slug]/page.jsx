@@ -1,12 +1,14 @@
 "use client";
-import { use, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import useProducts from "@/lib/useProducts";
 import ProductCard, { CardSkeletons } from "@/components/ProductCard";
 import { fromBn, toBn } from "@/lib/utils";
 
-export default function CategoryPage({ params }) {
-  const { slug } = use(params);
+export default function CategoryPage() {
+  const params = useParams();
+  const slug = params?.slug;
   const { loading, categories, products } = useProducts();
   const [sort, setSort] = useState("default");
 
