@@ -64,7 +64,6 @@ cp .env.example .env.local
 ```
 এবং প্রয়োজনীয় কি-গুলো পূরণ করুন:
 ```env
-MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/bazardor
 BETTER_AUTH_SECRET=your_32_character_better_auth_secret_here
 BETTER_AUTH_URL=http://localhost:3000
 NEXT_PUBLIC_APP_URL=http://localhost:3000
