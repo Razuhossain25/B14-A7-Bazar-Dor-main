@@ -93,6 +93,7 @@ export default function AuthForm({ mode }) {
 
   const handleSocialSignIn = async (provider) => {
     setSocialLoading(provider);
+    setFormError("");
     try {
       const callbackURL =
         typeof window !== "undefined" ? `${window.location.origin}/` : "/";
@@ -102,11 +103,17 @@ export default function AuthForm({ mode }) {
       });
 
       if (result?.error) {
-        toast.error(result.error.message || `${provider} দিয়ে সাইন ইন সম্ভব হচ্ছে না।`);
+        const provName = provider === "google" ? "Google" : "GitHub";
+        const msg = `${provName} দিয়ে সাইন ইন সম্ভব হচ্ছে না।`;
+        setFormError(msg);
+        toast.error(msg);
         setSocialLoading(null);
       }
     } catch {
-      toast.error("সোশ্যাল লগইন ব্যর্থ হয়েছে। আবার চেষ্টা করুন।");
+      const provName = provider === "google" ? "Google" : "GitHub";
+      const msg = `${provName} লগইন ব্যর্থ হয়েছে। আবার চেষ্টা করুন।`;
+      setFormError(msg);
+      toast.error(msg);
       setSocialLoading(null);
     }
   };
